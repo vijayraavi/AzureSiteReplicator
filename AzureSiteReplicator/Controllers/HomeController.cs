@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 
@@ -13,11 +12,8 @@ namespace AzureSiteReplicator.Controllers
             return View();
         }
 
-        public async Task<ActionResult> About()
+        public ActionResult About()
         {
-            var replicator = new Replicator();
-            await replicator.PublishContentToAllSites(Environment.Instance.ContentPath, Environment.Instance.PublishSettingsPath);
-
             ViewBag.Message = "Your application description page.";
 
             return View();
