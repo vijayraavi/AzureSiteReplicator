@@ -1,8 +1,10 @@
 ﻿using AzureSiteReplicator.Controllers;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
@@ -13,8 +15,9 @@ namespace AzureSiteReplicator
 {
     public class MvcApplication : System.Web.HttpApplication
     {
-        private bool _deploymentPending = false;
-        private bool _deploymentNeeded = false;
+        private int _inUseCount;
+        private DateTime _lastChangeTime;
+        private DateTime _publishStartTime;
 
         protected void Application_Start()
         {
@@ -40,29 +43,40 @@ namespace AzureSiteReplicator
 
         private void OnChanged(object sender, FileSystemEventArgs e)
         {
-            _deploymentNeeded = true;
+            Trace.TraceInformation("{0} OnChanged {1} {2}", DateTime.Now, e.FullPath, e.ChangeType);
+            _lastChangeTime = DateTime.Now;
 
-            // Don't do anything if we're already deploying
-            if (_deploymentPending) return;
-
-            while (_deploymentNeeded)
+            if (Interlocked.Increment(ref _inUseCount) == 1)
             {
-                _deploymentNeeded = false;
-                _deploymentPending = true;
-                OnChangedAsync().Wait();
-                _deploymentPending = false;
+                // Do the publish on a different thread to avoid locking the change notification thread (which would cause delayed notifications)
+                ThreadPool.QueueUserWorkItem(Publish);
             }
+            Interlocked.Decrement(ref _inUseCount);
         }
 
-        private async Task OnChangedAsync()
+        private void Publish(object state)
         {
-            var replicator = new Replicator();
-            await replicator.PublishContentToAllSites(Environment.Instance.ContentPath, Environment.Instance.PublishSettingsPath);
+            _publishStartTime = DateTime.MinValue;
+
+            // Keep publishing as long as some changes happened after we started the previous publish
+            while (_publishStartTime < _lastChangeTime)
+            {
+                // Wait till there are no change notifications for a while, so we don't start deploying while
+                // files are still being copied to the source folder
+                while (DateTime.Now - _lastChangeTime < TimeSpan.FromMilliseconds(250))
+                {
+                    Thread.Sleep(100);
+                }
+
+                _publishStartTime = DateTime.Now;
+                var replicator = new Replicator();
+                replicator.PublishContentToAllSites(Environment.Instance.ContentPath, Environment.Instance.PublishSettingsPath);
+            }
         }
 
         private void OnError(object sender, ErrorEventArgs e)
         {
-            System.Diagnostics.Trace.TraceError(e.GetException().ToString());
+            Trace.TraceError(e.GetException().ToString());
         }
     }
 }

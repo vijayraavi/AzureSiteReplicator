@@ -12,7 +12,12 @@ namespace AzureSiteReplicator.Controllers
 {
     public class Replicator
     {
-        public async Task PublishContentToAllSites(string contentPath, string publishSettingsPath)
+        public void PublishContentToAllSites(string contentPath, string publishSettingsPath)
+        {
+            PublishContentToAllSitesAsync(contentPath, publishSettingsPath).Wait();
+        }
+
+        public async Task PublishContentToAllSitesAsync(string contentPath, string publishSettingsPath)
         {
             string[] publishSettingsFiles = Directory.GetFiles(publishSettingsPath);
 
