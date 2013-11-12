@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Web;
@@ -35,7 +36,9 @@ namespace AzureSiteReplicator
                 PublishSettingsPath = Path.Combine(appData, "PublishSettingsFiles");
             }
 
+            Trace.TraceInformation("ContentPath={0}", ContentPath);
             Directory.CreateDirectory(ContentPath);
+            Trace.TraceInformation("PublishSettingsPath={0}", PublishSettingsPath);
             Directory.CreateDirectory(PublishSettingsPath);
         }
 
