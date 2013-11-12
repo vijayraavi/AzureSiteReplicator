@@ -46,32 +46,32 @@ namespace AzureSiteReplicator
             Trace.TraceInformation("{0} OnChanged {1} {2}", DateTime.Now, e.FullPath, e.ChangeType);
             _lastChangeTime = DateTime.Now;
 
-            if (Interlocked.Increment(ref _inUseCount) == 1)
-            {
-                // Do the publish on a different thread to avoid locking the change notification thread (which would cause delayed notifications)
-                ThreadPool.QueueUserWorkItem(Publish);
-            }
-            Interlocked.Decrement(ref _inUseCount);
+            // Start the publishing async, but don't wait for it. Just fire and forget.
+            var task = Publish();
         }
 
-        private void Publish(object state)
+        private async Task Publish()
         {
-            _publishStartTime = DateTime.MinValue;
-
-            // Keep publishing as long as some changes happened after we started the previous publish
-            while (_publishStartTime < _lastChangeTime)
+            if (Interlocked.Increment(ref _inUseCount) == 1)
             {
-                // Wait till there are no change notifications for a while, so we don't start deploying while
-                // files are still being copied to the source folder
-                while (DateTime.Now - _lastChangeTime < TimeSpan.FromMilliseconds(250))
-                {
-                    Thread.Sleep(100);
-                }
+                _publishStartTime = DateTime.MinValue;
 
-                _publishStartTime = DateTime.Now;
-                var replicator = new Replicator();
-                replicator.PublishContentToAllSites(Environment.Instance.ContentPath, Environment.Instance.PublishSettingsPath);
+                // Keep publishing as long as some changes happened after we started the previous publish
+                while (_publishStartTime < _lastChangeTime)
+                {
+                    // Wait till there are no change notifications for a while, so we don't start deploying while
+                    // files are still being copied to the source folder
+                    while (DateTime.Now - _lastChangeTime < TimeSpan.FromMilliseconds(250))
+                    {
+                        await Task.Delay(100);
+                    }
+
+                    _publishStartTime = DateTime.Now;
+                    var replicator = new Replicator();
+                    await replicator.PublishContentToAllSites(Environment.Instance.ContentPath, Environment.Instance.PublishSettingsPath);
+                }
             }
+            Interlocked.Decrement(ref _inUseCount);
         }
 
         private void OnError(object sender, ErrorEventArgs e)
