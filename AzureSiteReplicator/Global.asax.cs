@@ -68,7 +68,14 @@ namespace AzureSiteReplicator
 
                     _publishStartTime = DateTime.Now;
                     var replicator = new Replicator();
-                    await replicator.PublishContentToAllSites(Environment.Instance.ContentPath, Environment.Instance.PublishSettingsPath);
+                    try
+                    {
+                        await replicator.PublishContentToAllSites(Environment.Instance.ContentPath, Environment.Instance.PublishSettingsPath);
+                    }
+                    catch (Exception e)
+                    {
+                        Trace.TraceError("Publishing failed: {0}", e.ToString());
+                    }
                 }
             }
             Interlocked.Decrement(ref _inUseCount);

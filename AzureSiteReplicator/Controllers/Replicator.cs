@@ -16,6 +16,8 @@ namespace AzureSiteReplicator.Controllers
         {
             string[] publishSettingsFiles = Directory.GetFiles(publishSettingsPath);
 
+            Trace.TraceInformation("Publish settings found: {0}", String.Join(",", publishSettingsFiles));
+
             // Publish to all the target sites in parallel
             var allChanges = await Task.WhenAll(publishSettingsFiles.Select(async publishSettingsFile =>
             {
