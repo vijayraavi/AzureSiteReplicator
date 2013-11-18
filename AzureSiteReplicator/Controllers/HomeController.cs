@@ -16,6 +16,19 @@ namespace AzureSiteReplicator.Controllers
             return View(publishSettingsFiles);
         }
 
+        [HttpPost]
+        public ActionResult Index(HttpPostedFileBase file)
+        {
+            if (file.ContentLength > 0)
+            {
+                var fileName = Path.GetFileName(file.FileName);
+                var path = Path.Combine(Environment.Instance.PublishSettingsPath, fileName);
+                file.SaveAs(path);
+            }
+
+            return RedirectToAction("Index");
+        }
+
         public ActionResult About()
         {
             ViewBag.Message = "Your application description page.";
