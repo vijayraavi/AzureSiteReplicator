@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -9,7 +10,10 @@ namespace AzureSiteReplicator.Controllers
     {
         public ActionResult Index()
         {
-            return View();
+            var publishSettingsFiles = Directory.GetFiles(Environment.Instance.PublishSettingsPath)
+                .Select(path=> Path.GetFileName(path).Split('.').First());
+
+            return View(publishSettingsFiles);
         }
 
         public ActionResult About()
