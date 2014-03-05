@@ -24,6 +24,9 @@ namespace AzureSiteReplicator.Controllers
                 var fileName = Path.GetFileName(file.FileName);
                 var path = Path.Combine(Environment.Instance.PublishSettingsPath, fileName);
                 file.SaveAs(path);
+
+                // Trigger a deployment since we just added a new target site
+                Replicator.Instance.TriggerDeployment();
             }
 
             return RedirectToAction("Index");
