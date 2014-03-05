@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Web.Deployment;
@@ -13,8 +15,10 @@ namespace AzureSiteReplicator
             DeploymentBaseOptions destBaseOptions;
             string siteName = ParsePublishSettings(publishSettingsFile, out destBaseOptions);
 
+            Trace.TraceInformation("Starting WebDeploy for {0}", Path.GetFileName(publishSettingsFile));
+
             // Publish the content to the remote site
-            using (DeploymentObject deploymentObject = DeploymentManager.CreateObject(DeploymentWellKnownProvider.ContentPath, contentPath, sourceBaseOptions))
+            using (var deploymentObject = DeploymentManager.CreateObject(DeploymentWellKnownProvider.ContentPath, contentPath, sourceBaseOptions))
             {
                 // Note: would be nice to have an async flavor of this API...
                 return deploymentObject.SyncTo(DeploymentWellKnownProvider.ContentPath, siteName, destBaseOptions, new DeploymentSyncOptions());

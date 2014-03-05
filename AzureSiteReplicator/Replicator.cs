@@ -31,7 +31,6 @@ namespace AzureSiteReplicator
         private void OnChanged(object sender, FileSystemEventArgs e)
         {
             Trace.TraceInformation("{0} OnChanged {1} {2}", DateTime.Now, e.FullPath, e.ChangeType);
-            _lastChangeTime = DateTime.Now;
 
             TriggerDeployment();
         }
@@ -42,8 +41,14 @@ namespace AzureSiteReplicator
             Task task = PublishAsync();
         }
 
-        private async Task PublishAsync()
+        public async Task PublishAsync()
         {
+            // This prevents running into null ref issue
+            // http://stackoverflow.com/questions/16056016/nullreferenceexception-in-system-threading-tasks-calling-httpclient-getasyncurl
+            await Task.Delay(1).ConfigureAwait(false);
+
+            _lastChangeTime = DateTime.Now;
+
             if (Interlocked.Increment(ref _inUseCount) == 1)
             {
                 _publishStartTime = DateTime.MinValue;
@@ -59,10 +64,9 @@ namespace AzureSiteReplicator
                     }
 
                     _publishStartTime = DateTime.Now;
-                    var replicator = new Replicator();
                     try
                     {
-                        await replicator.PublishContentToAllSites(Environment.Instance.ContentPath, Environment.Instance.PublishSettingsPath);
+                        await PublishContentToAllSites(Environment.Instance.ContentPath, Environment.Instance.PublishSettingsPath);
                     }
                     catch (Exception e)
                     {
