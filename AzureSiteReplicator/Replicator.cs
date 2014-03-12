@@ -99,7 +99,7 @@ namespace AzureSiteReplicator
                 }
                 catch (Exception e)
                 {
-                    Trace.TraceError("Error processing {0}: {1}", Path.GetFileName(publishSettingsFile), e.Message);
+                    Trace.TraceError("Error processing {0}: {1}", Path.GetFileName(publishSettingsFile), e.ToString());
                     return null;
                 }
             }));

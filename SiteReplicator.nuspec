@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>sitereplicator</id>
+    <title>Site Replicator</title>
+    <version>1.0.5</version>
+    <authors>David Ebbo</authors>
+    <owners>David Ebbo</owners>
+    <licenseUrl>http://opensource.org/licenses/Apache-2.0</licenseUrl>
+    <projectUrl>https://github.com/davidebbo/AzureSiteReplicator</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A tool to replicate a site into other sites</description>
+    <tags>replication</tags>
+  </metadata>
+  <files>
+    <file src="artifacts\**\*.*" target="content" />
+  </files>
+</package>
